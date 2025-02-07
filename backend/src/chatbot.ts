@@ -53,3 +53,60 @@ function validateEnvironment(): void {
     console.warn("Warning: NETWORK_ID not set, defaulting to base-sepolia testnet");
     }
 }
+// Add this right after imports and before any other code
+validateEnvironment();
+
+// Configure a file to persist the agent's CDP MPC Wallet Data
+const WALLET_DATA_FILE = "wallet_data.txt";
+
+/**
+ * Initialize the agent with CDP Agentkit
+ *
+ * @returns Agent executor and config
+ */
+async function initializeAgent() {
+    try {
+    // Initialize LLM
+    const llm = new ChatOpenAI({
+        model: "gpt-4o-mini",
+    });
+
+    let walletDataStr: string | null = null;
+
+    // Read existing wallet data if available
+    if (fs.existsSync(WALLET_DATA_FILE)) {
+        try {
+        walletDataStr = fs.readFileSync(WALLET_DATA_FILE, "utf8");
+        } catch (error) {
+        console.error("Error reading wallet data:", error);
+        // Continue without wallet data
+        }
+    }
+    // Configure CDP Wallet Provider
+    const config = {
+        apiKeyName: process.env.CDP_API_KEY_NAME,
+        apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        cdpWalletData: walletDataStr || undefined,
+        networkId: process.env.NETWORK_ID || "base-sepolia",
+    };
+
+    const walletProvider = await CdpWalletProvider.configureWithWallet(config);
+
+    // Initialize AgentKit
+    const agentkit = await AgentKit.from({
+        walletProvider,
+        actionProviders: [
+        wethActionProvider(),
+        pythActionProvider(),
+        walletActionProvider(),
+        erc20ActionProvider(),
+        cdpApiActionProvider({
+            apiKeyName: process.env.CDP_API_KEY_NAME,
+            apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+        cdpWalletActionProvider({
+            apiKeyName: process.env.CDP_API_KEY_NAME,
+            apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+        ],
+    });
