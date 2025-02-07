@@ -115,7 +115,7 @@ async function initializeAgent() {
 
     // Store buffered conversation history in memory
     const memory = new MemorySaver();
-    const agentConfig = { configurable: { thread_id: "CDP AgentKit Chatbot Example!" } };
+    const agentConfig = { configurable: { thread_id: "Smart Flow - AI Crypto Analyst and Assistant" } };
 
    // Initialize React Agent using LLM AND CDP Agentkit tools
    const agent = await createReactAgent({
@@ -169,4 +169,156 @@ Important Notes (Security & Compliance):
 - This AI does not provide financial advice. Trading carries risks, and users should conduct their own research.
 - All trades require explicit user approval. No automatic executions.
 - Whale movement alerts do not guarantee market trends. They are based on blockchain data analytics.
-`
+`,
+   });
+   // Save wallet data
+   const exportedWallet = await walletProvider.exportWallet();
+   fs.writeFileSync(WALLET_DATA_FILE, JSON.stringify(exportedWallet));
+
+   return { agent, config: agentConfig };
+   } catch (error) {
+   console.error("Failed to initialize agent:", error);
+   throw error; // Re-throw to be handled by caller
+   }
+}
+
+/**
+* Run the agent autonomously with specified intervals
+*/
+async function runAutonomousMode(agent: any, config: any, interval = 10) {
+   console.log("Starting autonomous mode...");
+
+   while (true) {
+   try {
+    const thought =
+    "Monitor whale movements and analyze blockchain transactions on Base. " +
+    "Detect significant trades, analyze market trends, and generate insights. " +
+    "If a trading opportunity is detected, provide recommendations to the user while ensuring transparency and risk awareness.";
+  
+       const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
+
+       for await (const chunk of stream) {
+       if ("agent" in chunk) {
+           console.log(chunk.agent.messages[0].content);
+       } else if ("tools" in chunk) {
+           console.log(chunk.tools.messages[0].content);
+       }
+       console.log("-------------------");
+       }
+
+       await new Promise(resolve => setTimeout(resolve, interval * 1000));
+   } catch (error) {
+       if (error instanceof Error) {
+       console.error("Error:", error.message);
+       }
+       process.exit(1);
+   }
+   }
+}
+
+/**
+* Run the agent interactively based on user input
+*/
+async function runChatMode(agent: any, config: any) {
+   console.log("Starting chat mode... Type 'exit' to end.");
+
+   const rl = readline.createInterface({
+   input: process.stdin,
+   output: process.stdout,
+   });
+
+   const question = (prompt: string): Promise<string> =>
+   new Promise(resolve => rl.question(prompt, resolve));
+
+   try {
+   while (true) {
+       const userInput = await question("\nPrompt: ");
+
+       if (userInput.toLowerCase() === "exit") {
+       break;
+       }
+
+       const stream = await agent.stream({ messages: [new HumanMessage(userInput)] }, config);
+
+       for await (const chunk of stream) {
+       if ("agent" in chunk) {
+           console.log(chunk.agent.messages[0].content);
+       } else if ("tools" in chunk) {
+           console.log(chunk.tools.messages[0].content);
+       }
+       console.log("-------------------");
+       }
+   }
+   } catch (error) {
+   if (error instanceof Error) {
+       console.error("Error:", error.message);
+   }
+   process.exit(1);
+   } finally {
+   rl.close();
+   }
+}
+
+/**
+* Choose whether to run in autonomous or chat mode
+*/
+async function chooseMode(): Promise<"chat" | "auto"> {
+   const rl = readline.createInterface({
+   input: process.stdin,
+   output: process.stdout,
+   });
+
+   const question = (prompt: string): Promise<string> =>
+   new Promise(resolve => rl.question(prompt, resolve));
+
+   while (true) {
+   console.log("\nAvailable modes:");
+   console.log("1. chat    - Interactive chat mode");
+   console.log("2. auto    - Autonomous action mode");
+
+   const choice = (await question("\nChoose a mode (enter number or name): "))
+       .toLowerCase()
+       .trim();
+
+   if (choice === "1" || choice === "chat") {
+       rl.close();
+       return "chat";
+   } else if (choice === "2" || choice === "auto") {
+       rl.close();
+       return "auto";
+   }
+   console.log("Invalid choice. Please try again.");
+   }
+}
+
+/**
+* Main entry point
+*/
+async function main() {
+   try {
+   const { agent, config } = await initializeAgent();
+   const mode = await chooseMode();
+
+   if (mode === "chat") {
+       await runChatMode(agent, config);
+   } else {
+       await runAutonomousMode(agent, config);
+   }
+   } catch (error) {
+   if (error instanceof Error) {
+       console.error("Error:", error.message);
+   }
+   process.exit(1);
+   }
+}
+
+// Start the agent when running directly
+if (require.main === module) {
+   console.log("Starting Agent...");
+   main().catch(error => {
+   console.error("Fatal error:", error);
+   process.exit(1);
+   });
+}
+ 
+ export { initializeAgent };
