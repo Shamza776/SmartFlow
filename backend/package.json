@@ -4,16 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-        "start": "ts-node src/server.ts",
-        "dev": "nodemon src/server.ts",
-        "build": "tsc"
-      },
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "build": "tsc"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@coinbase/agentkit": "^0.1.1",
+    "@coinbase/agentkit-langchain": "^0.1.0",
     "@langchain/core": "^0.3.38",
     "@langchain/langgraph": "^0.2.45",
     "@langchain/openai": "^0.4.2",
