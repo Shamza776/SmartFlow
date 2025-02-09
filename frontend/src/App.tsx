@@ -1,5 +1,3 @@
-// src/App.tsx
-//IMPORT CSS FILE
 import './App.css';
 import { useState } from 'react';
 
@@ -89,4 +87,3 @@ export default function App() {
     </div>
   );
 }
-
