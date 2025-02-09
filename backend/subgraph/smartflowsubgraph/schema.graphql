@@ -10,7 +10,7 @@ type Swap @entity {
   blockNumber: BigInt! 
   blockTimestamp: BigInt! 
   transactionHash: Bytes! 
-  isWhale: Boolean! 
+  isWhale: Boolean 
 }
 type Burn @entity {
   id: String!
