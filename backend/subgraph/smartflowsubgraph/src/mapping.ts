@@ -15,9 +15,9 @@ export function handleSwap(event: Swap): void {
   swap.blockTimestamp = event.block.timestamp;
   swap.transactionHash = event.transaction.hash;
 
-  // Define a threshold for whale swaps (e.g., $100,000 in token value)
-  let whaleThreshold = BigInt.fromString("100000000000000000000000"); // Adjust based on token decimals
+ let whaleThreshold = BigInt.fromString("10000000000000000000"); 
   swap.isWhale = swap.amount0.gt(whaleThreshold) || swap.amount1.gt(whaleThreshold);
 
   swap.save();
+
 }
