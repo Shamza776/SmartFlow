@@ -1,9 +1,9 @@
-import { Swap } from "../generated/UniswapV3Pool/UniswapV3Pool";
-import { Swap as SwapEvent } from "../generated/schema";
+import { Swap as SwapEvent } from "../generated/UniswapV3Pool/UniswapV3Pool";
+import { Swap } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 
-export function handleSwap(event: Swap): void {
-  let swap = new SwapEvent(event.transaction.hash.toHexString());
+export function handleSwap(event: SwapEvent): void {
+  let swap = new Swap(event.transaction.hash.toHexString());
   swap.sender = event.params.sender;
   swap.recipient = event.params.recipient;
   swap.amount0 = event.params.amount0;
@@ -15,9 +15,8 @@ export function handleSwap(event: Swap): void {
   swap.blockTimestamp = event.block.timestamp;
   swap.transactionHash = event.transaction.hash;
 
- let whaleThreshold = BigInt.fromString("10000000000000000000"); 
+  let whaleThreshold = BigInt.fromString("10000000000000000000");
   swap.isWhale = swap.amount0.gt(whaleThreshold) || swap.amount1.gt(whaleThreshold);
 
   swap.save();
-
 }
